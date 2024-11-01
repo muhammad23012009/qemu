@@ -349,6 +349,11 @@ config ALLWINNER_H3
     select USB_EHCI_SYSBUS
     select SD
 
+config MT6765
+    bool
+    default y
+    depends on TCG && ARM
+
 config ALLWINNER_R40
     bool
     default y if TCG && ARM
