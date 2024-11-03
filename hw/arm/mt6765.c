@@ -15,11 +15,12 @@
 
 // SoC specific code
 
-#define SBSA_GTIMER_HZ 1000000000
+#define SBSA_GTIMER_HZ 26000000
 
 const hwaddr mt6765_memmap[] = {
     [MT6765_GIC_DIST] = 0x0c000000,
     [MT6765_GIC_REDIST] = 0x0c100000,
+    [MT6765_WDT] = 0x10007000,
     [MT6765_UART0] = 0x11002000,
     [MT6765_UART1] = 0x11003000,
     [MT6765_SDRAM] = 0x40000000
@@ -36,6 +37,8 @@ static void mt6765_init(Object *obj)
     }
 
     object_initialize_child(obj, "gic", &s->gic, gicv3_class_name());
+
+    object_initialize_child(obj, "wdt", &s->wdt, TYPE_MTK_WDT);
 }
 
 static void mt6765_realize(DeviceState *dev, Error **err)
@@ -109,6 +112,11 @@ static void mt6765_realize(DeviceState *dev, Error **err)
     serial_mm_init(get_system_memory(), s->memmap[MT6765_UART1], 2,
                    qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_UART1),
                    115200, serial_hd(1), DEVICE_NATIVE_ENDIAN);
+
+    /* WDT */
+    sysbus_realize(SYS_BUS_DEVICE(&s->wdt), &error_abort);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->wdt), 0, s->memmap[MT6765_WDT]);
+    sysbus_connect_irq(SYS_BUS_DEVICE(&s->wdt), 0, qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_WDT));
 }
 
 static void mt6765_class_init(ObjectClass *oc, void *data)

@@ -3,6 +3,7 @@
 
 #include "qom/object.h"
 #include "hw/intc/arm_gicv3.h"
+#include "hw/watchdog/wdt_mtk.h"
 #include "target/arm/cpu.h"
 
 #define MT6765_NCPUS    (8)
@@ -13,6 +14,7 @@ enum {
     MT6765_GIC_REDIST,
     MT6765_UART0,
     MT6765_UART1,
+    MT6765_WDT,
     MT6765_SDRAM
 };
 
@@ -23,7 +25,8 @@ enum {
 
 enum {
     MT6765_GIC_SPI_UART0 = 91,
-    MT6765_GIC_SPI_UART1 = 92
+    MT6765_GIC_SPI_UART1 = 92,
+    MT6765_GIC_SPI_WDT = 139
 };
 
 OBJECT_DECLARE_SIMPLE_TYPE(MT6765State, MT6765)
@@ -34,6 +37,7 @@ struct MT6765State {
     ARMCPU cpus[MT6765_NCPUS];
     const hwaddr *memmap;
     GICv3State gic;
+    MtkWdtState wdt;
 };
 
 #endif // MT6765_H
