@@ -4,12 +4,16 @@
 #include "qom/object.h"
 #include "hw/intc/arm_gicv3.h"
 #include "hw/watchdog/wdt_mtk.h"
+#include "hw/misc/mt6765_clk.h"
+#include "hw/misc/unimp.h"
 #include "target/arm/cpu.h"
 
 #define MT6765_NCPUS    (8)
 #define TYPE_MT6765     "mt6765"
 
 enum {
+    MT6765_CLK_TOPCKGEN,
+    MT6765_CLK_PERICFG,
     MT6765_GIC_DIST,
     MT6765_GIC_REDIST,
     MT6765_UART0,
@@ -38,6 +42,7 @@ struct MT6765State {
     const hwaddr *memmap;
     GICv3State gic;
     MtkWdtState wdt;
+    Mt6765ClkState topckgen;
 };
 
 #endif // MT6765_H

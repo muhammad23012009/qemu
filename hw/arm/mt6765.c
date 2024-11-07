@@ -15,15 +15,40 @@
 
 // SoC specific code
 
-#define SBSA_GTIMER_HZ 26000000
+#define SBSA_GTIMER_HZ 13000000
 
 const hwaddr mt6765_memmap[] = {
-    [MT6765_GIC_DIST] = 0x0c000000,
-    [MT6765_GIC_REDIST] = 0x0c100000,
-    [MT6765_WDT] = 0x10007000,
-    [MT6765_UART0] = 0x11002000,
-    [MT6765_UART1] = 0x11003000,
-    [MT6765_SDRAM] = 0x40000000
+    [MT6765_GIC_DIST]       = 0x0c000000,
+    [MT6765_GIC_REDIST]     = 0x0c100000,
+    [MT6765_CLK_TOPCKGEN]   = 0x10000000,
+    [MT6765_CLK_PERICFG]    = 0x10003000,
+    [MT6765_WDT]            = 0x10007000,
+    [MT6765_UART0]          = 0x11002000,
+    [MT6765_UART1]          = 0x11003000,
+    [MT6765_SDRAM]          = 0x40000000
+};
+
+static struct mt6765_unimplemented {
+    const char* name;
+    hwaddr iomem;
+    uint64_t size;
+} unimplemented_devices[] = {
+    {"apmixed",             0x1000c000, 0x1000},
+    {"infracfg",            0x10001000, 0x1000},
+    {"pericfg",             mt6765_memmap[MT6765_CLK_PERICFG], 0x1000},
+    {"pinctrl_iocfg0",      0x10005000, 0x1000},
+    {"pinctrl_iocfg1",      0x10002c00, 0x200},
+    {"pinctrl_iocfg2",      0x10002800, 0x200},
+    {"pinctrl_iocfg3",      0x10002a00, 0x200},
+    {"pinctrl_iocfg4",      0x10002000, 0x200},
+    {"pinctrl_iocfg5",      0x10002200, 0x200},
+    {"pinctrl_iocfg6",      0x10002400, 0x200},
+    {"pinctrl_iocfg7",      0x10002600, 0x200},
+    {"pinctrl_eint",        0x1000b000, 0x1000},
+    {"scpsys",              0x10006000, 0x1000},
+    {"sysirq",              0x10200a80, 0x50},
+    // This looks crucial, should probably implement this first
+    {"systimer",            0x10017000, 0x1000},
 };
 
 static void mt6765_init(Object *obj)
@@ -33,12 +58,14 @@ static void mt6765_init(Object *obj)
     s->memmap = mt6765_memmap;
 
     for (int i = 0; i < MT6765_NCPUS; i++) {
-        object_initialize_child(obj, "cpu[*]", &s->cpus[i], ARM_CPU_TYPE_NAME("cortex-a53"));
+        object_initialize_child(obj, "cpus[*]", &s->cpus[i], ARM_CPU_TYPE_NAME("cortex-a53"));
     }
 
     object_initialize_child(obj, "gic", &s->gic, gicv3_class_name());
 
     object_initialize_child(obj, "wdt", &s->wdt, TYPE_MTK_WDT);
+
+    object_initialize_child(obj, "topckgen", &s->topckgen, TYPE_MT6765_CLK);
 }
 
 static void mt6765_realize(DeviceState *dev, Error **err)
@@ -117,6 +144,17 @@ static void mt6765_realize(DeviceState *dev, Error **err)
     sysbus_realize(SYS_BUS_DEVICE(&s->wdt), &error_abort);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->wdt), 0, s->memmap[MT6765_WDT]);
     sysbus_connect_irq(SYS_BUS_DEVICE(&s->wdt), 0, qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_WDT));
+
+    /* Clocks */
+    sysbus_realize(SYS_BUS_DEVICE(&s->topckgen), &error_abort);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->topckgen), 0, s->memmap[MT6765_CLK_TOPCKGEN]);
+
+    /* Unimplemented devices */
+    for (int i = 0; i < ARRAY_SIZE(unimplemented_devices); i++) {
+        create_unimplemented_device(unimplemented_devices[i].name,
+                                    unimplemented_devices[i].iomem,
+                                    unimplemented_devices[i].size);
+    }
 }
 
 static void mt6765_class_init(ObjectClass *oc, void *data)
@@ -153,9 +191,8 @@ static void mt6765_mach_init(MachineState *machine)
 
     state = MT6765(object_new(TYPE_MT6765));
     object_property_add_child(OBJECT(machine), "soc", OBJECT(state));
-    object_unref(OBJECT(state));
-
     qdev_realize(DEVICE(state), NULL, &error_abort);
+    object_unref(OBJECT(state));
 
     /* SDRAM */
     memory_region_add_subregion(get_system_memory(), state->memmap[MT6765_SDRAM],
