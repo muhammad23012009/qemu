@@ -437,6 +437,15 @@ static bool gicd_readl(GICv3State *s, hwaddr offset,
          */
         *data = gicv3_iidr();
         return true;
+    case GICD_TYPER2:
+    {
+        /*
+        * Only notifies the userspace if Active state is supported on SGIs
+        * TODO: add bits showing DVIS support and VIDs
+        */
+        *data = (1 << 8);
+        return true;
+    }
     case GICD_STATUSR:
         /* RAZ/WI for us (this is an optional register and our implementation
          * does not track RO/WO/reserved violations to report them to the guest)
