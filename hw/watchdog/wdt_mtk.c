@@ -106,7 +106,7 @@ static void mtk_wdt_reset(DeviceState *dev)
 {
     MtkWdtState *s = MTK_WDT(dev);
 
-    s->regs[WDT_MTK_MODE] = WDT_MTK_MODE_ENABLE;
+    s->regs[WDT_MTK_MODE] = ~(WDT_MTK_MODE_ENABLE);
     s->regs[WDT_MTK_TIMEOUT] = WDT_MTK_MAX_TIMEOUT;
     s->regs[WDT_MTK_RST] = 0;
     s->regs[WDT_MTK_SWRST] = 0;
