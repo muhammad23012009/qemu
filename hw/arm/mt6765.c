@@ -134,14 +134,13 @@ static void mt6765_realize(DeviceState *dev, Error **err)
     sysbus_connect_irq(SYS_BUS_DEVICE(&s->systimer), 0, qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_SYSTIMER));
 
     /* UART */
-    serial_mm_init(get_system_memory(), s->memmap[MT6765_UART0], 2,
+    serial_mtk_init(get_system_memory(), s->memmap[MT6765_UART0], 2, 0x400,
                    qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_UART0),
-                   115200, serial_hd(0), DEVICE_NATIVE_ENDIAN);
+                   115200, serial_hd(0));
 
-    serial_mm_init(get_system_memory(), s->memmap[MT6765_UART1], 2,
+    serial_mtk_init(get_system_memory(), s->memmap[MT6765_UART1], 2, 0x400,
                    qdev_get_gpio_in(DEVICE(&s->gic), MT6765_GIC_SPI_UART1),
-                   115200, serial_hd(1), DEVICE_NATIVE_ENDIAN);
-
+                   115200, serial_hd(1));
     /* WDT */
     sysbus_realize(SYS_BUS_DEVICE(&s->wdt), &error_abort);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->wdt), 0, s->memmap[MT6765_WDT]);

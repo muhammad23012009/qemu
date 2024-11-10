@@ -25,6 +25,11 @@ config SERIAL_MM
     bool
     select SERIAL
 
+config SERIAL_MTK
+    bool
+    select SERIAL
+    default y if MT6765
+
 config SERIAL_PCI
     bool
     default y if PCI_DEVICES
