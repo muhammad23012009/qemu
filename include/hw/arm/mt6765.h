@@ -7,6 +7,7 @@
 #include "hw/misc/mt6765_clk.h"
 #include "hw/timer/mtk_systimer.h"
 #include "hw/char/serial-mtk.h"
+#include "hw/misc/mtk_socinfo.h"
 #include "hw/misc/unimp.h"
 #include "target/arm/cpu.h"
 
@@ -19,11 +20,12 @@ enum {
     MT6765_CLK_PERICFG,
     MT6765_GIC_DIST,
     MT6765_GIC_REDIST,
+    MT6765_SDRAM,
+    MT6765_SOCINFO,
     MT6765_SYSTIMER,
     MT6765_UART0,
     MT6765_UART1,
-    MT6765_WDT,
-    MT6765_SDRAM
+    MT6765_WDT
 };
 
 // GIC
@@ -49,6 +51,8 @@ struct MT6765State {
     MtkWdtState wdt;
     Mt6765ClkState topckgen;
     MtkSystimerState systimer;
+
+    MtkSocinfoState socinfo;
 };
 
 #endif // MT6765_H

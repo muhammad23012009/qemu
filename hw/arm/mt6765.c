@@ -26,6 +26,7 @@ const hwaddr mt6765_memmap[] = {
     [MT6765_SYSTIMER]       = 0x10017000,
     [MT6765_UART0]          = 0x11002000,
     [MT6765_UART1]          = 0x11003000,
+    [MT6765_SOCINFO]        = 0x11c50000,
     [MT6765_SDRAM]          = 0x40000000
 };
 
@@ -67,6 +68,8 @@ static void mt6765_init(Object *obj)
     object_initialize_child(obj, "topckgen", &s->topckgen, TYPE_MT6765_CLK);
 
     object_initialize_child(obj, "systimer", &s->systimer, TYPE_MTK_SYSTIMER);
+
+    object_initialize_child(obj, "socinfo", &s->socinfo, TYPE_MTK_SOCINFO);
 }
 
 static void mt6765_realize(DeviceState *dev, Error **err)
@@ -149,6 +152,11 @@ static void mt6765_realize(DeviceState *dev, Error **err)
     /* Clocks */
     sysbus_realize(SYS_BUS_DEVICE(&s->topckgen), &error_abort);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->topckgen), 0, s->memmap[MT6765_CLK_TOPCKGEN]);
+
+    /* SoC Info */
+    qdev_prop_set_int32(DEVICE(&s->socinfo), "soc", SOC_MT6765);
+    sysbus_realize(SYS_BUS_DEVICE(&s->socinfo), &error_abort);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->socinfo), 0, s->memmap[MT6765_SOCINFO]);
 
     /* Unimplemented devices */
     for (int i = 0; i < ARRAY_SIZE(unimplemented_devices); i++) {
